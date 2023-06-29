@@ -1,7 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "tAresta.h"
+#include "Grafo.h"
+#include "Adj.h"
+#include "ListaAdj.h"
+#include "ListaInt.h"
+#define METROS_SEG 3.6
 
 int main(int argc, char *argv[])
 {
@@ -18,11 +22,14 @@ int main(int argc, char *argv[])
     char *saida = malloc(strlen(argv[2]) + 1);
     strcpy(saida, argv[2]);
 
-    int num_vertices, num_arestas;
+    int num_vertices = 0, num_arestas = 0;
 
     FILE *arq_entrada = fopen(entrada, "r");
+    FILE *arq_saida = fopen(saida, "w");
 
     fscanf(arq_entrada, "%d;%d\n", &num_vertices, &num_arestas);
+
+    Grafo* grafo = criaGrafo(num_vertices, num_arestas);
 
     int noh_origem, noh_destino;
 
@@ -31,14 +38,20 @@ int main(int argc, char *argv[])
     double velocidade_inicial;
 
     fscanf(arq_entrada, "%lf\n", &velocidade_inicial);
+    //adciona as arestas na ListaAdjs e as atualizaçoes de velocidade na ListaAtu
+    preencheGrafo(grafo, arq_entrada, velocidade_inicial/METROS_SEG);
+    
+    int* predecessores = malloc((retornaNumVertices(grafo)+1)*sizeof(int));
+    double* dist;
+    RodaDijstra(grafo, predecessores, noh_origem, noh_destino, arq_saida, dist);
+    //executaDijstra(grafo, predecessores, noh_origem, noh_destino, arq_saida);
 
-    tAresta *vet_arestas = CriaVetorArestas(num_arestas);
-
-    PreencheVetorArestas(arq_entrada, vet_arestas, num_arestas, velocidade_inicial);
-
-    AlgoritmoDijkstra(vet_arestas, num_vertices, num_arestas, noh_origem, noh_destino, velocidade_inicial);
-
+    liberaGrafo(grafo);
+    free(entrada);
+    free(saida);
+    free(predecessores);
     fclose(arq_entrada);
+    fclose(arq_saida);
 
     return 0;
 }
