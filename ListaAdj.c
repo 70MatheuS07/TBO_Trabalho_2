@@ -77,11 +77,12 @@ Adj* retornaAdjLista(ListaAdj* lista){
     return lista->adj;
 }
 
-void atualizarVelVertice(ListaAdj* lista, int dest, double velocidade){
-    for(ListaAdj* p = lista->prox; p!=NULL; p = p->prox){
-        if(idAdj(p->adj) == dest){
-            mudarVelAdj(p->adj, velocidade);
+void atualizarVelVertice(ListaAdj* listaAdj, int dest, double novaVelocidade) {
+    for (ListaAdj* adj = listaAdj; adj != NULL; adj = proxListaAdj(adj)) {
+        Adj* adjacente = retornaAdjLista(adj);
+        if (idAdj(adjacente) == dest) {
+            mudarVelAdj(adjacente, novaVelocidade);
             break;
         }
-    }   
+    }
 }

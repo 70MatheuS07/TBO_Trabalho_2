@@ -14,6 +14,4 @@ void imprimeListaInt(ListaInt* lista, FILE* saida);
 
 void liberaListaInt(ListaInt* lista);
 
-int proxIntLista(ListaInt* lista);
-
 #endif

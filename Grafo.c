@@ -96,98 +96,63 @@ void preencheGrafo(Grafo* grafo, FILE* arq_entrada, double velocidadeInicial){
     }
 }
 
-void RodaDijstra(Grafo* grafo, int* p, int s, int f, FILE* saida, double* dist){
-    int cont = 0;
-    int verticeAtual = s;
-    double tempoAtual = 0.0, acumulado = 0.0; 
-    Item itemFinal;
-    dist = malloc( (grafo->vertices + 1)*sizeof(double));
-    while(1){
-        if(cont == 10) break;
-        cont++;
-
-        itemFinal = executaDijstra(grafo, p, verticeAtual, f, dist);
-
-        ListaInt* caminho = criaListaInt();
-        int i = f;
-        caminho = insereListaInt(caminho, f);
-        while(p[i]!=-1){
-            caminho = insereListaInt(caminho, p[i]);
-            i = p[i];
-        }
-        liberaListaInt(caminho);
-
-        atualizarVelocidades(tempoAtual, grafo);
-
-        verticeAtual = proxIntLista(caminho);
-        printf("\n\natual %d = prox %d\n\n", verticeAtual, proxIntLista(caminho));
-        if(verticeAtual == f) break;
-    }
-    imprimeResultado(grafo, p, s, f, saida, dist, itemFinal);
-}
-
-Heap* inicializaDijstra(Grafo* grafo, int s, int f, int* p){
+void executaDijstra(Grafo* grafo, int* p, int s, int f, FILE* saida) {
     Heap* fila = PQ_init(grafo->vertices);
-    //inicializa vetor de predecessores
-    for(int cont = 0; cont < grafo->vertices; cont++){
+    // Inicializa vetor de predecessores
+    for (int cont = 0; cont < grafo->vertices; cont++) {
         p[cont] = -1;
     }
-    //insere na fila todos os vertices
-    for(int cont = 0; cont < grafo->vertices; cont++){
+    // Insere na fila todos os vértices
+    for (int cont = 0; cont < grafo->vertices; cont++) {
         Adj* aux = retornaAdjLista(grafo->VetorAdjs[cont]);
         int id = idAdj(aux);
 
-        if(id != s){
-            PQ_insert(fila, make_item(id, INT_MAX/2));
-        }
-        else{
+        if (id != s) {
+            PQ_insert(fila, make_item(id, INT_MAX / 2));
+        } else {
             PQ_insert(fila, make_item(id, 0));
         }
     }
-    return fila;
-}
 
-void imprimeResultado(Grafo* grafo, int* p, int s, int f, FILE* saida, double* dist, Item verticeAnalisado){
-   //faz a impressão
-    //Lista int serve para imprimir o caminho de acordo com o dados coletados no vetor de predecessores p
-    ListaInt* caminho = criaListaInt();
-    int i = f;
-    caminho = insereListaInt(caminho, f);
-    while(p[i]!=-1){
-        caminho = insereListaInt(caminho, p[i]);
-        i = p[i];
-    }
-    imprimeListaInt(caminho, saida);
-    liberaListaInt(caminho);
-    //imprime a distancia percorrida em km até f
-    fprintf(saida, "%lf\n", dist[id(verticeAnalisado)]/1000.0);
-    //imprime tempo no formato HH:MM:SS.fff
-    imprimeTempoFormato(value(verticeAnalisado), saida);
-}
-
-Item executaDijstra(Grafo* grafo, int* p, int s, int f, double* dist){
-    Heap* fila = inicializaDijstra(grafo, s, f, p);
+    double* dist = malloc((grafo->vertices + 1) * sizeof(double));
     Item verticeAnalisado;
     int idv;
 
-    while(!PQ_empty(fila)){
-        //pega o menor vertice
+    while (!PQ_empty(fila)) {
+        // Pega o menor vértice
         Item q = PQ_min(fila);
 
-        atualizarVel(id(q),value(q), grafo);
+        atualizarVel(id(q), value(q), grafo);
 
-        relaxamento(fila, p, grafo->VetorAdjs[id(q)-1]);
+        relaxamento(fila, p, grafo->VetorAdjs[id(q) - 1]);
 
         verticeAnalisado = PQ_delmin(fila);
 
         idv = id(verticeAnalisado);
         dist[idv] = distancia(verticeAnalisado);
-        //caso já tenha feito o relaxamento do vertice f sai do while
-        if(idv == f)
+        // Caso já tenha feito o relaxamento do vértice f, sai do while
+        if (idv == f)
             break;
     }
+
+    // Faz a impressão
+    // Lista int serve para imprimir o caminho de acordo com os dados coletados no vetor de predecessores p
+    ListaInt* caminho = criaListaInt();
+    int i = f;
+    caminho = insereListaInt(caminho, f);
+    while (p[i] != -1) {
+        caminho = insereListaInt(caminho, p[i]);
+        i = p[i];
+    }
+    imprimeListaInt(caminho, saida);
+    liberaListaInt(caminho);
+    // Imprime a distância percorrida em km até f
+    fprintf(saida, "%lf\n", dist[idv] / 1000.0);
+    // Imprime o tempo no formato HH:MM:SS.fff
+    imprimeTempoFormato(value(verticeAnalisado), saida);
+
     PQ_finish(fila);
-    return verticeAnalisado;
+    free(dist);
 }
 
 void relaxamento(Heap* fila, int* p, ListaAdj* s){
@@ -212,33 +177,20 @@ int retornaNumVertices(Grafo* grafo){
     return grafo->vertices;
 }
 
-void atualizarVelocidades(double tempoAtual, Grafo* grafo){
-    for(ListaAtu* p = grafo->atualizacoes; p!=NULL; p = proxListaAtu(p)){
-            //enquando o tempo da lista for menor que o tempoAtual 
-            if(retornaSeg(p) < tempoAtual){
-                //se a variavel vertice for igual ao vertice de origem da lista
-                atualizarVelVertice(grafo->VetorAdjs[retornaOri(p)-1], retornaDest(p), retornaVelo(p)/3.6);
+void atualizarVel(int vertice, double tempoAtual, Grafo* grafo) {
+    for (ListaAtu* p = grafo->atualizacoes; p != NULL; p = proxListaAtu(p)) {
+        // Enquanto o tempo da lista for menor que o tempoAtual
+        if (retornaSeg(p) < tempoAtual) {
+            // Se a variável "vertice" for igual ao vértice de origem da lista
+            if (vertice == retornaOri(p)) {
+                // Atualiza a adj da lista de adjacência do vértice com a nova velocidade
+                atualizarVelVertice(grafo->VetorAdjs[vertice - 1], retornaDest(p), retornaVelo(p) / 3.6);
             }
-            //pode sair uma vez que a lista está organizada de maneira cronologica
-            else{
-                break;
-            }
+        }
+        // Pode sair uma vez que a lista está organizada de maneira cronológica
+        else {
+            break;
+        }
     }
 }
 
-void atualizarVel(int vertice, double tempoAtual, Grafo* grafo){
-    for(ListaAtu* p = grafo->atualizacoes; p!=NULL; p = proxListaAtu(p)){
-            //enquando o tempo da lista for menor que o tempoAtual 
-            if(retornaSeg(p) < tempoAtual){
-                //se a variavel vertice for igual ao vertice de origem da lista
-                if(vertice == retornaOri(p)){
-                    //atualiza a adj da lista de adj do vertice com a nova velocidade 
-                    atualizarVelVertice(grafo->VetorAdjs[vertice-1], retornaDest(p), retornaVelo(p)/3.6);
-                }
-            }
-            //pode sair uma vez que a lista está organizada de maneira cronologica
-            else{
-                break;
-            }
-    }
-}

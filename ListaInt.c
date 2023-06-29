@@ -37,9 +37,3 @@ void liberaListaInt(ListaInt* lista){
         p = t;
     }
 }
-int proxIntLista(ListaInt* lista){
-    if(lista->prox!=NULL)
-    return lista->prox->p;
-
-    return 1;
-}

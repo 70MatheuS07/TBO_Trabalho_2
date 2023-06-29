@@ -42,9 +42,7 @@ int main(int argc, char *argv[])
     preencheGrafo(grafo, arq_entrada, velocidade_inicial/METROS_SEG);
     
     int* predecessores = malloc((retornaNumVertices(grafo)+1)*sizeof(int));
-    double* dist;
-    RodaDijstra(grafo, predecessores, noh_origem, noh_destino, arq_saida, dist);
-    //executaDijstra(grafo, predecessores, noh_origem, noh_destino, arq_saida);
+    executaDijstra(grafo, predecessores, noh_origem, noh_destino, arq_saida);
 
     liberaGrafo(grafo);
     free(entrada);
